@@ -79,6 +79,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.eclipse.jifa.common.listener.ProgressListener.NoOpProgressListener;
 import static org.eclipse.jifa.common.vo.support.SearchPredicate.createPredicate;
@@ -578,18 +579,23 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             if (result instanceof IResultTable) {
                 table = (IResultTable) result;
 
-                RefinedResultBuilder builder =
-                    new RefinedResultBuilder(new SnapshotQueryContext(context.snapshot), table);
-                builder.setSortOrder(3, Column.SortDirection.DESC);
-                data.resultContext = (RefinedTable) builder.build();
+                data.resultContext = table;
                 DirectByteBuffer.Summary summary = new DirectByteBuffer.Summary();
-                summary.totalSize = data.resultContext.getRowCount();
+                summary.totalSize = 0;
 
-                for (int i = 0; i < summary.totalSize; i++) {
-                    Object row = data.resultContext.getRow(i);
+                List<Object> rows = IntStream.range(0, data.resultContext.getRowCount() - 1)
+                    .mapToObj(data.resultContext::getRow)
+                    .parallel()
+                    // TODO also not sure why this filter was applied in the original product
+                    // anyway, it is  useful to force the loading of data
+                    .filter(data::isValid)
+                    .collect(Collectors.toList());
+
+                for (Object row : rows) {
                     summary.position += data.position(row);
                     summary.limit += data.limit(row);
                     summary.capacity += data.capacity(row);
+                    summary.totalSize++;
                 }
                 data.summary = summary;
             } else {
@@ -607,28 +613,30 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     @Override
     public PageView<DirectByteBuffer.Item> getDirectByteBuffers(int page, int pageSize) {
+        PagingRequest pagingRequest = new PagingRequest(page, pageSize);
         return $(() -> {
             DirectByteBufferData data = queryDirectByteBufferData(context);
-            RefinedTable resultContext = data.resultContext;
-            return PageViewBuilder.build(new PageViewBuilder.Callback<Object>() {
-                @Override
-                public int totalSize() {
-                    return data.summary.totalSize;
-                }
+            IResultTable resultContext = data.resultContext;
 
-                @Override
-                public Object get(int index) {
-                    return resultContext.getRow(index);
-                }
-            }, new PagingRequest(page, pageSize), row -> {
-                DirectByteBuffer.Item item = new DirectByteBuffer.Item();
-                item.objectId = resultContext.getContext(row).getObjectId();
-                item.label = data.label(row);
-                item.position = data.position(row);
-                item.limit = data.limit(row);
-                item.capacity = data.capacity(row);
-                return item;
-            });
+            final AtomicInteger afterFilterCount = new AtomicInteger(0);
+            List<DirectByteBuffer.Item> items = IntStream.range(0, resultContext.getRowCount() - 1)
+                .mapToObj(resultContext::getRow)
+                .filter(data::isValid)
+                .peek(filtered -> afterFilterCount.incrementAndGet())
+                .sorted(Comparator.comparingLong(data::capacity).reversed())
+                .skip(pagingRequest.from())
+                .limit(pagingRequest.getPageSize())
+                .map(row -> {
+                    DirectByteBuffer.Item item = new DirectByteBuffer.Item();
+                    item.objectId = resultContext.getContext(row).getObjectId();
+                    item.label = data.label(row);
+                    item.position = data.position(row);
+                    item.limit = data.limit(row);
+                    item.capacity = data.capacity(row);
+                    return item;
+                })
+                .collect(Collectors.toList());
+            return new PageView(pagingRequest, afterFilterCount.get(), items);
         });
     }
 
