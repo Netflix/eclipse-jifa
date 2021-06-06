@@ -73,7 +73,7 @@
                             @setSelectedObjectId="setSelectedObjectId"
                   />
                 </el-tab-pane>
-
+<!--
                 <el-tab-pane name="leakSuspects" lazy>
                   <span slot="label">{{$t('jifa.heap.leakSuspects')}}</span>
                   <leak-suspects :file="file"
@@ -81,7 +81,7 @@
                                  @incomingRefsOfObj="incomingRefsOfObj"
                                  @setSelectedObjectId="setSelectedObjectId"/>
                 </el-tab-pane>
-
+-->
                 <el-tab-pane name="GCRoots" lazy>
                   <span slot="label">{{$t('jifa.heap.GCRoots')}}</span>
                   <div v-bind:style="{ 'height': '100%', 'width': resultDivWidth}">
