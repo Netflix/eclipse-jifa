@@ -16,7 +16,7 @@ package org.eclipse.jifa.hda.impl;
 import org.eclipse.jifa.hda.api.Model;
 import org.eclipse.mat.query.IResult;
 import org.eclipse.mat.query.IResultTree;
-import org.eclipse.mat.query.refined.RefinedTable;
+import org.eclipse.mat.query.IResultTable;
 import org.eclipse.mat.snapshot.ISnapshot;
 
 import java.lang.ref.SoftReference;
@@ -56,14 +56,14 @@ public class AnalysisContext {
     static class DirectByteBufferData {
         static final String OQL =
             "SELECT s.@displayName as label, s.position as position, s.limit as limit, s.capacity as " +
-            "capacity FROM java.nio.DirectByteBuffer s where s.cleaner != null";
+            "capacity, s.cleaner as cleaner FROM java.nio.DirectByteBuffer s";
 
         static final Map<String, Object> ARGS = new HashMap<>(1);
         static {
             ARGS.put("queryString", OQL);
         }
 
-        RefinedTable resultContext;
+        IResultTable resultContext;
 
         Model.DirectByteBuffer.Summary summary;
 
@@ -83,6 +83,9 @@ public class AnalysisContext {
             return (Integer) resultContext.getColumnValue(row, 3);
         }
 
+        public boolean isValid(Object row) {
+            return resultContext.getColumnValue(row, 4) != null;
+        }
     }
 
     static class LeakReportData {
