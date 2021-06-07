@@ -89,4 +89,18 @@ public class VirtualDefaultItem extends DominatorTree.DefaultItem {
     public double getPercent() {
         return (Double) results.getColumnValue(e, COLUMN_PERCENT);
     }
+
+    public static DominatorTree.DefaultItem realize(VirtualDefaultItem v) {
+        DominatorTree.DefaultItem newItem = new DominatorTree.DefaultItem();
+        newItem.label = v.getLabel();
+        newItem.suffix = v.getSuffix();
+        newItem.objectId = v.getObjectId();
+        newItem.objectType = v.getObjectType();
+        newItem.gCRoot = v.isGCRoot();
+        newItem.shallowSize = v.getShallowSize();
+        newItem.retainedSize = v.getRetainedSize();
+        newItem.percent = v.getPercent();
+        newItem.isObjType = true;
+        return newItem;
+    }
 }

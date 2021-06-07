@@ -100,4 +100,20 @@ public class VirtualClassLoaderItem extends DominatorTree.ClassLoaderItem {
     public double getPercent() {
         return (Double) results.getColumnValue(e, COLUMN_PERCENT);
     }
+
+    public static DominatorTree.ClassLoaderItem realize(VirtualClassLoaderItem v) {
+        DominatorTree.ClassLoaderItem newItem = new DominatorTree.ClassLoaderItem();
+        newItem.label = v.getLabel();
+        newItem.suffix = v.getSuffix();
+        newItem.objectId = v.getObjectId();
+        newItem.objectType = v.getObjectType();
+        newItem.gCRoot = v.isGCRoot();
+        newItem.shallowSize = v.getShallowSize();
+        newItem.retainedSize = v.getRetainedSize();
+        newItem.percent = v.getPercent();
+        newItem.isObjType = true;
+
+        newItem.objects = v.getObjects();
+        return newItem;
+    }
 }

@@ -103,4 +103,20 @@ public class VirtualPackageItem extends DominatorTree.PackageItem {
     public double getPercent() {
         return (Double) results.getColumnValue(e, COLUMN_PERCENT);
     }
+
+    public static DominatorTree.PackageItem realize(VirtualPackageItem v) {
+        DominatorTree.PackageItem newItem = new DominatorTree.PackageItem();
+        newItem.label = v.getLabel();
+        newItem.suffix = v.getSuffix();
+        newItem.objectId = v.getObjectId();
+        newItem.objectType = v.getObjectType();
+        newItem.gCRoot = v.isGCRoot();
+        newItem.shallowSize = v.getShallowSize();
+        newItem.retainedSize = v.getRetainedSize();
+        newItem.percent = v.getPercent();
+        newItem.isObjType = true;
+
+        newItem.objects = v.getObjects();
+        return newItem;
+    }
 }

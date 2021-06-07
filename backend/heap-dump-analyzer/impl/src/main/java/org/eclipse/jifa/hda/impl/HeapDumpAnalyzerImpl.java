@@ -1730,6 +1730,8 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             .sorted(DominatorTree.DefaultItem.sortBy(sortBy, ascendingOrder))
             .skip(pagingRequest.from())
             .limit(pagingRequest.getPageSize())
+            .parallel()
+            .map(VirtualDefaultItem::realize)
             .collect(Collectors.toList());
         return new PageView(pagingRequest, afterFilterCount.get(), items);
     }
@@ -1747,6 +1749,8 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             .sorted(DominatorTree.ClassItem.sortBy(sortBy, ascendingOrder))
             .skip(pagingRequest.from())
             .limit(pagingRequest.getPageSize())
+            .parallel()
+            .map(VirtualClassItem::realize)
             .collect(Collectors.toList());
         return new PageView(pagingRequest, afterFilterCount.get(), items);
     }
@@ -1764,6 +1768,8 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             .sorted(DominatorTree.ClassLoaderItem.sortBy(sortBy, ascendingOrder))
             .skip(pagingRequest.from())
             .limit(pagingRequest.getPageSize())
+            .parallel()
+            .map(VirtualClassLoaderItem::realize)
             .collect(Collectors.toList());
         return new PageView(pagingRequest, afterFilterCount.get(), items);
     }
@@ -1781,6 +1787,8 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             .sorted(DominatorTree.PackageItem.sortBy(sortBy, ascendingOrder))
             .skip(pagingRequest.from())
             .limit(pagingRequest.getPageSize())
+            .parallel()
+            .map(VirtualPackageItem::realize)
             .collect(Collectors.toList());
         return new PageView(pagingRequest, afterFilterCount.get(), items);
     }

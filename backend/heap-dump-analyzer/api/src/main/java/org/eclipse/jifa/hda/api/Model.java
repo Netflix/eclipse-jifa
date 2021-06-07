@@ -119,7 +119,7 @@ public interface Model {
                 .add("percent", ClassItem::getPercent)
                 .add("Objects", ClassItem::getObjects)
                 .build();
-            private int objects;
+            public int objects;
             private int[] objectIds;
 
             public static Comparator<ClassItem> sortBy(String field, boolean ascendingOrder) {
@@ -190,7 +190,7 @@ public interface Model {
                 .add("percent", PackageItem::getPercent)
                 .add("Objects", PackageItem::getObjects)
                 .build();
-            private long objects;
+            public long objects;
             private int[] objectIds;
 
             public static Comparator<PackageItem> sortBy(String field, boolean ascendingOrder) {
