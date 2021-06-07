@@ -118,7 +118,7 @@ public interface Model {
                 .add("percent", ClassItem::getPercent)
                 .add("Objects", ClassItem::getObjects)
                 .build();
-            private int objects;
+            public int objects;
 
             public static Comparator<ClassItem> sortBy(String field, boolean ascendingOrder) {
                 return ascendingOrder ? sortTable.get(field) : sortTable.get(field).reversed();
@@ -188,7 +188,7 @@ public interface Model {
                 .add("percent", PackageItem::getPercent)
                 .add("Objects", PackageItem::getObjects)
                 .build();
-            private long objects;
+            public long objects;
 
             public static Comparator<PackageItem> sortBy(String field, boolean ascendingOrder) {
                 return ascendingOrder ? sortTable.get(field) : sortTable.get(field).reversed();
