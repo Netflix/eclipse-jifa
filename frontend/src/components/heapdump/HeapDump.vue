@@ -151,7 +151,7 @@
                                    @pathToGCRootsOfObj="pathToGCRootsOfObj"/>
                   </div>
                 </el-tab-pane>
-
+<!--
                 <el-tab-pane name="directByteBuffer" lazy>
                   <span slot="label"> {{$t('jifa.heap.directByteBuffer')}}</span>
                   <div v-bind:style="{ 'height': '100%', 'width': resultDivWidth}">
@@ -160,7 +160,7 @@
                                         @pathToGCRootsOfObj="pathToGCRootsOfObj"/>
                   </div>
                 </el-tab-pane>
-
+-->
                 <el-tab-pane name="systemProperty" lazy>
                   <span slot="label"> {{$t('jifa.heap.systemProperty')}}</span>
                   <system-property :file="file"/>
