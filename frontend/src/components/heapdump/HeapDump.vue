@@ -235,6 +235,21 @@
                   </div>
                 </el-tab-pane>
 
+                <el-tab-pane name="nflxMetrics" lazy>
+                  <span slot="label"> Atlas metrics </span>
+                  <div v-bind:style="{ 'height': '100%', 'width': resultDivWidth}">
+                    <Query :file="file"
+                         queryType="sql"
+                         @outgoingRefsOfObj="outgoingRefsOfObj"
+                         @incomingRefsOfObj="incomingRefsOfObj"
+                         @outgoingRefsOfClass="outgoingRefsOfClass"
+                         @incomingRefsOfClass="incomingRefsOfClass"
+                         @pathToGCRootsOfObj="pathToGCRootsOfObj"
+                         @setSelectedObjectId="setSelectedObjectId"
+                         preparedQuery='select m.name metric_name, count(*) metric_count from "com.netflix.spectator.api.DefaultId" m group by m.name order by metric_count desc' />
+                  </div>
+                </el-tab-pane>
+
                 <el-tab-pane name="HeapFileCompare" lazy v-if="$jifa.dev()">
                   <span slot="label">{{ $t("jifa.heap.compare") }}</span>
                   <heap-file-compare :file="file"/>
