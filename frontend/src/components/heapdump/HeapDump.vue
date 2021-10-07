@@ -239,13 +239,14 @@
                   <span slot="label"> Atlas metrics </span>
                   <div v-bind:style="{ 'height': '100%', 'width': resultDivWidth}">
                     <Query :file="file"
-                         queryType="sql"
+                         queryType='sql'
                          @outgoingRefsOfObj="outgoingRefsOfObj"
                          @incomingRefsOfObj="incomingRefsOfObj"
                          @outgoingRefsOfClass="outgoingRefsOfClass"
                          @incomingRefsOfClass="incomingRefsOfClass"
                          @pathToGCRootsOfObj="pathToGCRootsOfObj"
                          @setSelectedObjectId="setSelectedObjectId"
+                         preparedQueryType='sql'
                          preparedQuery='select m.name metric_name, count(*) metric_count from "com.netflix.spectator.api.DefaultId" m group by m.name order by metric_count desc' />
                   </div>
                 </el-tab-pane>
