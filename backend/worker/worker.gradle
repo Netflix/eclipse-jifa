@@ -20,6 +20,7 @@ dependencies {
     implementation project(':backend:common')
     implementation project(':backend:heap-dump-analyzer:api')
     runtimeOnly project(':backend:heap-dump-analyzer:provider')
+    runtimeOnly project(':backend:heap-dump-analyzer:hook')
     implementation project(':backend:gc-log-analyzer')
     implementation project(':backend:thread-dump-analyzer')
 
