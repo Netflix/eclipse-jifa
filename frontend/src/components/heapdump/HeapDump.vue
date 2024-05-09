@@ -22,9 +22,9 @@ import Query from '@/components/heapdump/Query.vue';
 import GCRoots from '@/components/heapdump/GCRoots.vue';
 import UnreachableObjects from '@/components/heapdump/UnreachableObjects.vue';
 import ClassLoaders from '@/components/heapdump/ClassLoaders.vue';
-import DirectByteBuffers from '@/components/heapdump/DirectByteBuffers.vue';
+// import DirectByteBuffers from '@/components/heapdump/DirectByteBuffers.vue';
 import DuplicateClasses from '@/components/heapdump/DuplicateClasses.vue';
-import LeakSuspects from '@/components/heapdump/LeakSuspects.vue';
+// import LeakSuspects from '@/components/heapdump/LeakSuspects.vue';
 import DynamicTabs from '@/components/heapdump/DynamicTabs.vue';
 import { MoreFilled } from '@element-plus/icons-vue';
 import { listenAll } from '@/components/heapdump/event-bus';
@@ -46,14 +46,14 @@ listenAll(() => {
 
 const tabs = {
   Overview,
-  LeakSuspects,
+  // LeakSuspects, // hidden for performance reasons
   DominatorTree,
   Histogram,
   Threads,
   ClassLoaders,
   Query,
   GCRoots,
-  DirectByteBuffers,
+  // DirectByteBuffers, // hidden for performance reasons
   DuplicateClasses,
   UnreachableObjects,
   SystemProperties
