@@ -14,9 +14,9 @@
 version = rootProject.rootDir.toPath().resolve('version').toFile().text.lines().findFirst().get()
 
 repositories {
-    maven {
-        url "https://plugins.gradle.org/m2/"
-    }
+    maven { url 'https://artifacts.netflix.net/libs-releases-local-pom' }
+    maven { url 'https://artifacts.netflix.net/nfrepo-everything-pom' }
+    maven { url "https://plugins.gradle.org/m2/" }
     mavenCentral()
 }
 
