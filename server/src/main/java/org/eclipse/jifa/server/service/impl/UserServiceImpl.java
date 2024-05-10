@@ -201,11 +201,17 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
 
     @Override
     public UserEntity getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // default to creating a template user
+        if (authentication.isAuthenticated()) {
+            return createUser(authentication.getName(), false);
+        }
+
         if (!config.isAllowLogin()) {
             return null;
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JifaAuthenticationToken token) {
             return userRepo.findById(token.getUserId()).orElseThrow(() -> CE(USER_NOT_FOUND));
         }
@@ -219,11 +225,17 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
 
     @Override
     public UserEntity getCurrentUserRef() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // default to creating a template user
+        if (authentication.isAuthenticated()) {
+            return createUser(authentication.getName(), false);
+        }
+
         if (!config.isAllowLogin()) {
             return null;
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JifaAuthenticationToken token) {
             return userRepo.getReferenceById(token.getUserId());
         }
