@@ -29,11 +29,11 @@ function showSetup() {
   <el-divider direction="vertical" />
   <!-- DownloadLink / -->
 
-  <template v-if="analysis.phase === Phase.SUCCESS || analysis.phase === Phase.FAILURE">
+  <!-- template v-if="analysis.phase === Phase.SUCCESS || analysis.phase === Phase.FAILURE">
     <el-divider direction="vertical" />
 
     <el-button link class="ej-header-button" :icon="SetUp" @click="showSetup">
       {{ t('analysis.setting') }}
     </el-button>
-  </template>
+  </template -->
 </template>
