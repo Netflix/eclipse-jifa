@@ -13,6 +13,7 @@
 plugins {
     id 'application'
     id "org.springframework.boot" version "3.1.4"
+    id "com.netflix.nebula.jakartaee-migration"
 }
 
 apply from: "$rootDir/gradle/java.gradle"
@@ -20,6 +21,21 @@ apply plugin: 'io.spring.dependency-management'
 
 springBoot {
     applicationName = 'jifa'
+}
+
+jakartaeeMigration {
+    includeTransform('com.netflix.archaius:archaius2-api')
+    includeTransform('com.netflix.archaius:archaius2-core')
+    includeTransform('com.netflix.archaius:archaius2-guice')
+    includeTransform('com.netflix.archaius:archaius2-persisted2')
+    migrate()
+}
+
+// need to rewrite the dependency blitz4j to use the latest
+dependencyManagement {
+    dependencies {
+        dependency 'com.netflix.blitz4j:blitz4j:1.42.0'
+    }
 }
 
 dependencies {
@@ -34,7 +50,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    implementation 'com.netflix.spring:spring-boot-netflix-sso:3.1.19'
+    implementation 'com.netflix.spring:spring-boot-netflix-sso-authn-embedded:3.1.19'
+    implementation 'com.netflix.spring:spring-boot-netflix-starter-configuration:3.1.19'
+    implementation 'com.netflix.spring:spring-boot-netflix-starter-security:3.1.19'
+    implementation 'com.netflix.spring:spring-boot-netflix-starter-security-authn-embedded:3.1.19'
+
+    implementation 'netflix:gandalf-authz-client:latest.release'
+
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -147,6 +173,7 @@ bootJar {
         attributes('Implementation-Title': 'Eclipse Jifa')
     }
     archiveFileName = 'jifa.jar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 bootDistTar {
