@@ -27,7 +27,7 @@ function showSetup() {
 </script>
 <template>
   <el-divider direction="vertical" />
-  <DownloadLink />
+  <!-- DownloadLink / -->
 
   <template v-if="analysis.phase === Phase.SUCCESS || analysis.phase === Phase.FAILURE">
     <el-divider direction="vertical" />
