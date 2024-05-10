@@ -16,8 +16,18 @@ jifa:
   database-user: ${MYSQL_USER:jifa}
   database-password: ${MYSQL_PASSWORD:jifa}
   disabled-file-transfer-methods: [ scp ]
+  open-browser-when-ready: false
+  allow-login: false
+  allow-anonymous-access: false
+  allow-registration: false
+  security-filters-enabled: false
+
+fc:
+  flamecommanderApi: https://flamecommander.cluster.us-east-1.test.cloud.netflix.net:7004/
+  ssmOutputPath: /efs/ssm-outputs
 
 spring:
+  application.name: flamecommander
   servlet:
     multipart:
       max-request-size: 512MB
@@ -30,7 +40,18 @@ spring:
   task.scheduling.pool.size: 8
 
 server:
+  max-http-request-header-size: 5MB
   tomcat:
     relaxed-query-chars:
       - '['
       - ']'
+
+logging:
+  level:
+    ROOT: DEBUG
+
+netflix:
+  sso:
+    config:
+      anonymous:
+        resource-patterns: /jifa-api/health-check
