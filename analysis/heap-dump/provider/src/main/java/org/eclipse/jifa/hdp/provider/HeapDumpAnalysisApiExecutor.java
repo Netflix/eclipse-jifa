@@ -177,13 +177,7 @@ public class HeapDumpAnalysisApiExecutor extends AbstractApiExecutor<HeapDumpAna
 
     @Override
     public void clean(Path target) {
-        super.clean(target);
-        File index = indexFile(target);
-        if (index.exists()) {
-            if (!index.delete()) {
-                log.warn("Failed to delete index file: {}", index.getAbsolutePath());
-            }
-        }
+        throw new UnsupportedOperationException("clean is not supported for heap dump analysis");
     }
 
     @Override
