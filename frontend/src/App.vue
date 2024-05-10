@@ -66,7 +66,7 @@ onMounted(() => {
         />
 
         <template v-else-if="!env.loginRequired">
-          <Side class="ej-side" />
+          <!-- Side class="ej-side" / -->
           <div class="ej-main">
             <Main />
           </div>
