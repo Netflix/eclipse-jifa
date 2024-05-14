@@ -20,6 +20,7 @@ public enum ServerErrorCode implements ErrorCode {
     USERNAME_EXISTS("Username exists"),
     INCORRECT_PASSWORD("Incorrect password"),
     ACCESS_DENIED("Access denied"),
+    ACCESS_DENIED_STEPUP("Access denied, try step-up"),
     FILE_NOT_FOUND("File not found"),
     FILE_DELETED("File deleted"),
     UNSUPPORTED_NAMESPACE("Unsupported namespace"),
