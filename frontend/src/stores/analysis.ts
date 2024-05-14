@@ -33,7 +33,9 @@ export const useAnalysisStore = defineStore('analysis', {
 
     leaveGuard: true,
 
-    showSetupPage: false
+    showSetupPage: false,
+
+    stepUpToken: null as string | null,
   }),
 
   actions: {
@@ -53,6 +55,10 @@ export const useAnalysisStore = defineStore('analysis', {
 
     setShowSetupPage(showSetupPage: boolean) {
       this.showSetupPage = showSetupPage;
-    }
+    },
+
+    setStepUpToken(token: string | null) {
+      this.stepUpToken = token;
+    },
   }
 });

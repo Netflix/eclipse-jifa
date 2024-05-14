@@ -19,6 +19,7 @@ import org.eclipse.jifa.server.condition.ConditionalOnRole;
 import org.eclipse.jifa.server.domain.converter.AnalysisApiStompResponseMessageConverter;
 import org.eclipse.jifa.server.enums.Role;
 import org.eclipse.jifa.server.service.JwtService;
+import org.eclipse.jifa.server.service.impl.netflix.NetflixGandalfUserAccessService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -38,16 +39,24 @@ import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
+
+import com.netflix.infosec.stairmaster.enforcement.client.StepUpConstants;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 @ConditionalOnRole({Role.MASTER, Role.STANDALONE_WORKER})
 @Configuration
 @EnableWebSocketMessageBroker
+@Slf4j
 public class StompConfigurer extends ConfigurationAccessor implements WebSocketMessageBrokerConfigurer {
 
     private final int channelPoolSize = Runtime.getRuntime().availableProcessors() * 2;
@@ -127,6 +136,17 @@ public class StompConfigurer extends ConfigurationAccessor implements WebSocketM
                         accessor.setUser(jwtService.convert(jwtDecoder.decode(token)));
                     }
                 }
+
+                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    String token = accessor.getFirstNativeHeader(StepUpConstants.STEP_UP_AUTHENTICATION_HEADER_NAME);
+                    log.info("CONNECT step up token: {}", token);
+                    if (token != null) {
+                        NetflixGandalfUserAccessService.STEP_UP_TOKEN.set(token);
+                    } else {
+                        NetflixGandalfUserAccessService.STEP_UP_TOKEN.remove();
+                    }
+                }
+
                 return message;
             }
         });

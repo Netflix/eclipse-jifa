@@ -28,6 +28,7 @@ jakartaeeMigration {
     includeTransform('com.netflix.archaius:archaius2-core')
     includeTransform('com.netflix.archaius:archaius2-guice')
     includeTransform('com.netflix.archaius:archaius2-persisted2')
+    includeTransform('netflix:stairmaster-enforcement-client-spring')
     migrate()
 }
 
@@ -60,6 +61,7 @@ dependencies {
     implementation 'com.netflix.spring:spring-boot-netflix-starter-security-authn-embedded:3.1.19'
 
     implementation 'netflix:gandalf-authz-client:latest.release'
+    implementation 'netflix:stairmaster-enforcement-client-spring:latest.release'
 
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
