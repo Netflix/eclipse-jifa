@@ -35,13 +35,20 @@ interface ResRej {
 function byAxios(resolve: (req: Requester) => void) {
   resolve({
     request(namespace: string, api: string, target: string, parameters?: object): Promise<any> {
+      const stepUpToken = useAnalysisStore().stepUpToken;
+      let headers = {};
+      if (stepUpToken) {
+        headers = {
+          'net.netflix.stepup.authentication': stepUpToken,
+        };
+      }
       return axios
         .post('/jifa-api/analysis', {
           namespace,
           api,
           target,
           parameters
-        })
+        }, { headers })
         .then((resp) => resp.data);
     },
 
@@ -64,11 +71,15 @@ function byStomp(resolve: (req: Requester) => void) {
     return requestId++;
   }
 
-  let token = useEnv().token;
+  client.connectHeaders = {};
+  const token = useEnv().token;
   if (token) {
-    client.connectHeaders = {
-      'jifa-token': token
-    };
+    client.connectHeaders['jifa-token'] = token;
+  }
+
+  const stepUpToken = useAnalysisStore().stepUpToken;
+  if (stepUpToken) {
+    client.connectHeaders['net.netflix.stepup.authentication'] = stepUpToken;
   }
 
   client.onConnect = () => {
@@ -111,9 +122,22 @@ function byStomp(resolve: (req: Requester) => void) {
       resolve({
         request(namespace: string, api: string, target: string, parameters?: object): Promise<any> {
           let id = nextRequestId();
+          const stepUpToken = useAnalysisStore().stepUpToken;
+          let headers;
+          if (stepUpToken) {
+            headers = {
+              'request-id': id.toString(),
+              'net.netflix.stepup.authentication': stepUpToken,
+            };
+          } else {
+            headers = {
+              'request-id': id.toString(),
+            };
+          }
+
           let params = {
             destination: '/ad/analysis',
-            headers: { 'request-id': id.toString() },
+            headers: headers,
             body: JSON.stringify({
               namespace,
               api,

@@ -8,6 +8,7 @@ import static org.eclipse.jifa.server.enums.ServerErrorCode.UNAVAILABLE;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.time.Duration;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -28,6 +29,8 @@ import com.google.gson.annotations.SerializedName;
 import com.netflix.gandalf.agent.AuthorizationClient;
 import com.netflix.gandalf.agent.GandalfException;
 import com.netflix.gandalf.agent.protogen.AuthorizationResponse;
+import com.netflix.infosec.stairmaster.enforcement.client.StepUpEnforcementException;
+import com.netflix.infosec.stairmaster.enforcement.client.StepUpEnforcer;
 import com.netflix.metatron.ipc.security.MetatronSslContext;
 
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class NetflixGandalfUserAccessService implements FileAccessService {
+    // create a threadlocal to track the Netflix token
+    public static final ThreadLocal<String> STEP_UP_TOKEN = ThreadLocal.withInitial(() -> null);
 
     @Value("${fc.flamecommanderApi}")
     private String flamecommanderApi;
@@ -44,6 +49,9 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    StepUpEnforcer stepUpEnforcer;
 
     public NetflixGandalfUserAccessService() {
         this.authorizationClient = new AuthorizationClient();
@@ -86,13 +94,32 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
             AuthorizationResponse authorizationResponse = authorizationClient.isAuthorized(fcEvent.application,
                             fcEvent.stack, fcEvent.accountId, fcEvent.region, subject, "SSH", resource, null);
             log.debug("gandalf response: {}", authorizationResponse);
-            Validate.isTrue(authorizationResponse.getAllowed(), ACCESS_DENIED, "Access denied by gandalf");
+
+            if (authorizationResponse.getAllowed()) {
+                return;
+            }
+
+            if (!user.isAdmin()) {
+                Validate.error(ServerErrorCode.ACCESS_DENIED, "Access denied by gandalf");
+            }
+
+            // else fall through to step-up enforcement
         }
         catch (GandalfException e)
         {
             Validate.error(UNAVAILABLE, "gandalf error: " + e.getMessage());
         }
 
+        // enforce will throw if it is not successful
+        try {
+            stepUpEnforcer.requireStepUp()
+                    .withScopes("instanceId:" + ic.instanceId)
+                    .withMaxLifetime(Duration.ofMinutes(90))
+                    .withStepUpToken(STEP_UP_TOKEN.get())
+                    .enforce();
+        } catch (StepUpEnforcementException e) {
+            Validate.error(ServerErrorCode.ACCESS_DENIED_STEPUP, e.getMessage());
+        }
     }
 
     static class FcEvent {
