@@ -20,6 +20,7 @@ import org.eclipse.jifa.server.domain.dto.AnalysisApiStompResponseMessage;
 import org.eclipse.jifa.server.domain.exception.ElasticWorkerNotReadyException;
 import org.eclipse.jifa.server.enums.Role;
 import org.eclipse.jifa.server.service.AnalysisApiService;
+import org.eclipse.jifa.server.service.impl.netflix.NetflixGandalfUserAccessService;
 import org.eclipse.jifa.server.util.ControllerUtil;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Header;
@@ -35,6 +36,10 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MimeType;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+
+import com.netflix.infosec.stairmaster.enforcement.client.StepUpConstants;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -60,12 +65,18 @@ public class AnalysisApiStompController {
     public CompletableFuture<AnalysisApiStompResponseMessage>
     handleRequest(@Header(name = StompHeaders.CONTENT_TYPE, required = false, defaultValue = Constant.APPLICATION_JSON) String contentType,
                   @Header(name = Constant.STOMP_ANALYSIS_API_REQUEST_ID_KEY, required = false, defaultValue = "") String requestId,
+                  @Header(name = StepUpConstants.STEP_UP_AUTHENTICATION_HEADER_NAME, required = false) String stepUpToken,
                   Message<byte[]> message) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         assert accessor != null;
         Authentication auth = (Authentication) accessor.getUser();
         SecurityContextHolder.getContext().setAuthentication(auth != null ? auth : ANONYMOUS);
 
+        log.info("handleRequest step up token: {}", stepUpToken);
+        if (stepUpToken != null) {
+            NetflixGandalfUserAccessService.STEP_UP_TOKEN.set(stepUpToken);
+        }
+ 
         try {
             MimeType mimeType = ControllerUtil.checkMimeTypeForStompMessage(contentType);
             CompletableFuture<AnalysisApiStompResponseMessage> responseMessage = new CompletableFuture<>();
@@ -80,6 +91,7 @@ public class AnalysisApiStompController {
             return responseMessage;
         } finally {
             SecurityContextHolder.getContext().setAuthentication(null);
+            NetflixGandalfUserAccessService.STEP_UP_TOKEN.remove();
         }
     }
 
