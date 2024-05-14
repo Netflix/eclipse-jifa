@@ -29,6 +29,7 @@ const env = useEnv();
 const route = useRoute();
 const analysis = useAnalysisStore();
 analysis.setTarget(route.meta.fileType as FileType, props.target);
+analysis.setStepUpToken(route.query.token as string);
 
 const toolBarComponent = toRaw(analysis.fileType?.toolBarComponent);
 const setupComponent = toRaw(analysis.fileType?.setupComponent);
@@ -122,7 +123,18 @@ function pollProgress() {
 }
 
 function handleError(e?) {
-  if (e instanceof AxiosError) {
+  // check if error is a 403, we might do a step-up auth
+  if (e instanceof AxiosError && e?.response?.status === 403) {
+    let message = e.response?.data?.message;
+    let words = message.split(' ');
+
+    // replace 10th word from message, split by spaces
+    let target = words[9] + "&redirect=" + window.location.href;
+    window.location.href = target;
+    words[9] = target;
+
+    log.value = words.join(' ');
+  } else if (e instanceof AxiosError) {
     log.value = e.response?.data?.message ? e.response.data.message : e;
   } else if (e.message) {
     log.value = e.message;
@@ -155,8 +167,10 @@ onMounted(() => {
   window.addEventListener('beforeunload', beforeWindowUnload);
 
   analysis.setPhase(Phase.INIT);
+  const headers = { headers: { 'net.netflix.stepup.authentication': analysis.stepUpToken } };
+
   axios
-    .get(`/jifa-api/files/${props.target}`)
+    .get(`/jifa-api/files/${props.target}`, headers)
     .then((resp) => {
       let id = resp.data.id as number;
       let filename = resp.data.originalName as string;

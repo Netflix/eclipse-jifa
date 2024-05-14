@@ -22,10 +22,6 @@ jifa:
   allow-registration: false
   security-filters-enabled: false
 
-fc:
-  flamecommanderApi: https://flamecommander.cluster.us-east-1.test.cloud.netflix.net:7004/
-  ssmOutputPath: /efs/ssm-outputs
-
 spring:
   application.name: flamecommander
   servlet:

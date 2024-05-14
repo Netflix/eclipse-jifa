@@ -75,6 +75,9 @@ public class GlobalExceptionHandler {
             if (ServerErrorCode.ACCESS_DENIED == errorCodeAccessor.getErrorCode()) {
                 return 401;
             }
+            if (ServerErrorCode.ACCESS_DENIED_STEPUP == errorCodeAccessor.getErrorCode()) {
+                return 403;
+            }
         }
         return 500;
     }

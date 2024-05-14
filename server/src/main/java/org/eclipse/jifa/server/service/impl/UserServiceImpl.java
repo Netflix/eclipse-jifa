@@ -13,6 +13,8 @@
 package org.eclipse.jifa.server.service.impl;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jifa.common.domain.exception.ShouldNotReachHereException;
 import org.eclipse.jifa.common.util.Validate;
@@ -28,13 +30,21 @@ import org.eclipse.jifa.server.repository.UserRepo;
 import org.eclipse.jifa.server.service.CipherService;
 import org.eclipse.jifa.server.service.JwtService;
 import org.eclipse.jifa.server.service.UserService;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.memory.UserAttribute;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import com.netflix.springboot.sso.caller.CallerIdentity;
+import com.netflix.springboot.sso.caller.PrincipalSsoCallerProvider;
+import com.netflix.springboot.sso.caller.SsoCaller;
+import com.netflix.springboot.sso.caller.SsoCallerSpi;
 
 import java.util.Optional;
 
@@ -44,7 +54,11 @@ import static org.eclipse.jifa.server.enums.ServerErrorCode.USERNAME_EXISTS;
 import static org.eclipse.jifa.server.enums.ServerErrorCode.USER_NOT_FOUND;
 
 @Service
+@Slf4j
 public class UserServiceImpl extends ConfigurationAccessor implements UserService {
+
+    @Value("${fc.adminGroup}")
+    private String adminGroup;
 
     private final TransactionTemplate transactionTemplate;
     private final UserRepo userRepo;
@@ -53,6 +67,7 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     private final CipherService cipherService;
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
+    private final SsoCallerSpi ssoCallerProvider;
 
     public UserServiceImpl(TransactionTemplate transactionTemplate,
                            UserRepo userRepo,
@@ -60,7 +75,8 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
                            ExternalLoginDataRepo externalLoginDataRepo,
                            CipherService cipherService,
                            PasswordEncoder encoder,
-                           JwtService jwtService) {
+                           JwtService jwtService,
+                           PrincipalSsoCallerProvider ssoCallerProvider) {
         this.transactionTemplate = transactionTemplate;
         this.userRepo = userRepo;
         this.loginDataRepo = loginDataRepo;
@@ -68,6 +84,7 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
         this.cipherService = cipherService;
         this.encoder = encoder;
         this.jwtService = jwtService;
+        this.ssoCallerProvider = ssoCallerProvider;
     }
 
     @PostConstruct
@@ -205,7 +222,7 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
 
         // default to creating a template user
         if (authentication.isAuthenticated()) {
-            return createUser(authentication.getName(), false);
+            return makeUser(authentication);
         }
 
         if (!config.isAllowLogin()) {
@@ -229,7 +246,7 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
 
         // default to creating a template user
         if (authentication.isAuthenticated()) {
-            return createUser(authentication.getName(), false);
+            return makeUser(authentication);
         }
 
         if (!config.isAllowLogin()) {
@@ -245,6 +262,17 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
         }
 
         throw new ShouldNotReachHereException();
+    }
+
+    UserEntity makeUser(Authentication authentication) {
+        boolean isAdmin = false;
+
+        if (authentication instanceof SsoCaller) {
+            CallerIdentity initial = ((SsoCaller) authentication).getInitial();
+            isAdmin = initial.getUser().get().getGroups().contains(adminGroup);
+        }
+
+        return createUser(authentication.getName(), isAdmin);
     }
 
     private UserEntity createUser(String name, boolean admin) {
