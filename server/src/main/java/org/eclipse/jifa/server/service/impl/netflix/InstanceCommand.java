@@ -46,4 +46,12 @@ public class InstanceCommand {
 
         return new InstanceCommand(parts[1], parts[2], pid);
     }
+
+    public String toString() {
+        return "InstanceCommand{" +
+            "instanceId='" + instanceId + '\'' +
+            ", commandId='" + commandId + '\'' +
+            ", pid=" + pid +
+            '}';
+    }
 }
