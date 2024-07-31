@@ -12,7 +12,6 @@ import java.time.Duration;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import org.eclipse.jifa.common.domain.exception.ErrorCode;
 import org.eclipse.jifa.common.util.Validate;
 import org.eclipse.jifa.server.domain.entity.shared.file.BaseFileEntity;
 import org.eclipse.jifa.server.domain.entity.shared.user.UserEntity;
@@ -74,6 +73,7 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
         final FcEvent fcEvent;
         try {
             fcEvent = loadFlamecommanderEvent(ic);
+            log.debug("flamecommander ic: {} received event: {}", ic, fcEvent);
         } catch (IOException e) {
             log.error("flamecommander api error, sending error", e);
             Validate.error(FILE_NOT_FOUND, "flamecommander api error: " + e.getMessage());
@@ -86,9 +86,10 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
 
         Validate.notNull(user.getName(), ACCESS_DENIED, "No user identity found");
 
-        log.debug("found identity, verifying resources against gandalf");
         JsonObject subject = createGandalfSubject(user.getName());
         JsonObject resource = createGandalfResource();
+        log.debug("found identity, verifying resources against gandalf, fcEvent: {} user: {} subject: {}, resource: {}",
+                        fcEvent, user, subject, resource);
         try
         {
             AuthorizationResponse authorizationResponse = authorizationClient.isAuthorized(fcEvent.application,
@@ -111,6 +112,7 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
         }
 
         // enforce will throw if it is not successful
+        log.debug("found identity, gandalf did not pass, user isAdmin, enforcing step-up");
         try {
             stepUpEnforcer.requireStepUp()
                     .withScopes("instanceId:" + ic.instanceId)
@@ -128,6 +130,16 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
         String application;
         String stack;
         String region;
+
+        @Override
+        public String toString() {
+            return "FcEvent{" +
+                "accountId='" + accountId + '\'' +
+                ", application='" + application + '\'' +
+                ", stack='" + stack + '\'' +
+                ", region='" + region + '\'' +
+                '}';
+        }
     }
 
     String getFcProfileLookupUrl(InstanceCommand ic) {
