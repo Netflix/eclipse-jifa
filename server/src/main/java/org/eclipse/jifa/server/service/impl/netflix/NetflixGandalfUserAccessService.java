@@ -44,6 +44,9 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
     @Value("${fc.flamecommanderApi}")
     private String flamecommanderApi;
 
+    @Value("${fc.authPolicyPrefix}")
+    private String authPolicyPrefix;
+
     AuthorizationClient authorizationClient;
 
     @Autowired
@@ -87,13 +90,15 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
         Validate.notNull(user.getName(), ACCESS_DENIED, "No user identity found");
 
         JsonObject subject = createGandalfSubject(user.getName());
-        JsonObject resource = createGandalfResource();
-        log.debug("found identity, verifying resources against gandalf, fcEvent: {} user: {} subject: {}, resource: {}",
-                        fcEvent, user, subject, resource);
+        String policyName = authPolicyNameFromFcEvent(fcEvent);
+
+        log.debug("found identity, verifying resources against gandalf, fcEvent: {} user: {} subject: {}, policyName: {}",
+                        fcEvent, user, subject, policyName);
         try
         {
-            AuthorizationResponse authorizationResponse = authorizationClient.isAuthorized(fcEvent.application,
-                            fcEvent.stack, fcEvent.accountId, fcEvent.region, subject, "SSH", resource, null);
+            AuthorizationResponse authorizationResponse = authorizationClient.isAuthorized(
+                            policyName, subject, null);
+
             log.debug("gandalf response: {}", authorizationResponse);
 
             if (authorizationResponse.getAllowed()) {
@@ -163,10 +168,8 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
         return subject;
     }
 
-    JsonObject createGandalfResource() {
-        final JsonObject resource = new JsonObject();
-        resource.addProperty("username", "nfsuper");
-        return resource;
+    String authPolicyNameFromFcEvent(FcEvent fcEvent) {
+        return authPolicyPrefix + fcEvent.application;
     }
 
 }
