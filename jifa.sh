@@ -28,7 +28,7 @@ check_docker() {
 
 launch_jifa() {
   check_docker
-  docker run --pull=always -e JAVA_TOOL_OPTIONS="$JVM_OPTIONS" -p ${PORT}:${PORT} $MOUNTS eclipsejifa/jifa:${TAG} --jifa.port=${PORT} $INPUT_FILES
+  docker run --pull=always -e JDK_JAVA_OPTIONS="$JVM_OPTIONS" -p ${PORT}:${PORT} $MOUNTS eclipsejifa/jifa:${TAG} --jifa.port=${PORT} $INPUT_FILES
 }
 
 while [ $# -gt 0 ]; do

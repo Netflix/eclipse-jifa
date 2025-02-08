@@ -2,7 +2,7 @@
 
 ## 单机模式
 
-将 [role](./configuration#role) 设置为 `STANDALONE_WORKER` 时，Jifa 将以单机模式运行。
+将 [role](./configuration.md#role) 设置为 `STANDALONE_WORKER` 时，Jifa 将以单机模式运行。
 
 在此模式下，默认会使用 H2 作为数据库。
 
@@ -13,7 +13,7 @@
 
 ### 部署步骤
 
-1. [构建](./getting-started#构建)完成后，将产物 `jifa.zip`（或 `jifa.tar`）上传到目标环境。
+1. [构建](./getting-started.md#构建)完成后，将产物 `jifa.zip`（或 `jifa.tar`）上传到目标环境。
 2. 解压：`unzip jifa.zip` 或 `tar -xf jifa.tar`
 3. 运行：`./jifa/bin/jifa`
 

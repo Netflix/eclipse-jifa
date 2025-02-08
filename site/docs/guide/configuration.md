@@ -11,7 +11,7 @@ Configure by adding application arguments `--jifa.<key>=<value>` or specifying a
 
 ## role
 
-The running role. Refer to [deployment](./deployment) for more information.
+The running role. Refer to [deployment](./deployment.md) for more information.
 
 Type: Enum
 

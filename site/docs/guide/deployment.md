@@ -2,7 +2,7 @@
 
 ## Standalone
 
-Jifa will run in standalone mode if [role](./configuration#role) is `STANDALONE_WORKER`.
+Jifa will run in standalone mode if [role](./configuration.md#role) is `STANDALONE_WORKER`.
 
 Suitable scenarios:
 
@@ -13,7 +13,7 @@ In this mode, H2 will be used as the database by default.
 
 ### Steps
 
-1. After [build](./getting-started#build), transfer `jifa.zip` (or `jifa.tar`) to your target environment.
+1. After [build](./getting-started.md#build), transfer `jifa.zip` (or `jifa.tar`) to your target environment.
 2. `unzip jifa.zip` or `tar -xf jifa.tar`
 3. `./jifa/bin/jifa`
 

@@ -60,7 +60,7 @@ $ ./gradlew runStaticWorker
 
 You can also run these tasks in IDE.
 
-For the introduction of roles, please refer to [deployment](./deployment).
+For the introduction of roles, please refer to [deployment](./deployment.md).
 
 ### Frontend
 
