@@ -54,11 +54,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot'
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
-    implementation 'com.netflix.spring:spring-boot-netflix-sso:latest.release'
-    implementation 'com.netflix.spring:spring-boot-netflix-sso-authn-embedded:latest.release'
-    implementation 'com.netflix.spring:spring-boot-netflix-starter-configuration:latest.release'
-    implementation 'com.netflix.spring:spring-boot-netflix-starter-security:latest.release'
-    implementation 'com.netflix.spring:spring-boot-netflix-starter-security-authn-embedded:latest.release'
+    implementation 'com.netflix.spring:spring-boot-netflix-sso:3.2.51'
+    implementation 'com.netflix.spring:spring-boot-netflix-sso-authn-embedded:3.2.51'
+    implementation 'com.netflix.spring:spring-boot-netflix-starter-configuration:3.2.51'
+    implementation 'com.netflix.spring:spring-boot-netflix-starter-security:3.2.51'
+    implementation 'com.netflix.spring:spring-boot-netflix-starter-security-authn-embedded:3.2.51'
 
     implementation 'netflix:gandalf-authz-client:latest.release'
     implementation 'netflix:stairmaster-enforcement-client-spring:latest.release'
