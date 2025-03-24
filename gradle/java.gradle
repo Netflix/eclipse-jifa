@@ -60,6 +60,13 @@ test {
     finalizedBy jacocoTestReport
 }
 
+configurations.all {
+  exclude group: 'ch.qos.logback', module: 'logback-classic'
+  exclude group: 'ch.qos.logback', module: 'logback-core'
+  exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+  exclude module: 'slf4j-log4j12'
+}
+
 jacocoTestReport {
     dependsOn test
 }
