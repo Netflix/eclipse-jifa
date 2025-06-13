@@ -28,6 +28,7 @@ import Content from '@/components/threaddump/Content.vue';
 import Thread from '@/components/threaddump/Thread.vue';
 import Monitor from '@/components/threaddump/Monitor.vue';
 import CallSiteTree from '@/components/threaddump/CallSiteTree.vue';
+import ThreadViewerGrid from '@/components/threaddump/ThreadViewerGrid.vue';
 
 const { request } = useAnalysisApiRequester();
 
@@ -36,7 +37,9 @@ const activeNames = ref<string[]>([
   'threadSummary',
   'threadGroupSummary',
   'javaMonitors',
-  'callSiteTree'
+  'callSiteTree',
+  'Table View',
+  'fileContent'
 ]);
 
 const deadLockCount = ref(0);
@@ -66,6 +69,10 @@ const threadDialogVisible = ref(false);
 const selectedThreadType = ref();
 const selectedThreadGroup = ref();
 
+const threadsArray = ref([]);
+const selectedThread = ref<any>(null);
+const selectedThreadContent = ref('');
+
 function sum(arr) {
   return arr.reduce((l, r) => l + r);
 }
@@ -90,6 +97,20 @@ function showThreadsOfGroup(group) {
   selectedThreadGroup.value = group;
   selectedThreadType.value = null;
   threadDialogVisible.value = true;
+}
+
+function onThreadSelected(thread) {
+  selectedThread.value = thread;
+  const lineNumberStart = thread.lineNumberStart;
+  const lineNumberEnd = thread.lineNumberEnd;
+  if (lineNumberStart && lineNumberEnd) {
+    // Calculate limit as end - start + 1
+    const limit = lineNumberEnd - lineNumberStart + 1;
+    request('content', { lineNo: lineNumberStart, lineLimit: limit }).then((data) => {
+      // data.content is assumed to be a list of strings
+      selectedThreadContent.value = data.content.join('\n');
+    });
+  }
 }
 
 onMounted(() => {
@@ -177,6 +198,21 @@ onMounted(() => {
     threadStats.value = _threadStats;
     threadGroupStats.value = _threadGroupStats;
     loading.value = false;
+  });
+
+  request('rows').then((threadsData) => {
+    console.log(threadsData);
+    threadsArray.value = threadsData.map((t) => ({
+      tid: t.tid,
+      name: t.name,
+      state: t.state,
+      stackDepth: t.stackDepth,
+      frames: t.frames,
+      cpuTime: t.cpuTime,
+      elapsedTime: t.elapsedTime,
+      lineNumberStart: t.lineNumberStart,
+      lineNumberEnd: t.lineNumberEnd
+    }));
   });
 });
 </script>
@@ -296,6 +332,26 @@ onMounted(() => {
 
           <el-collapse-item name="callSiteTree" :title="tdt('callSiteTree')">
             <CallSiteTree />
+          </el-collapse-item>
+
+          <el-collapse-item name="emptyBox" :title="tdt('emptyBox')">
+            <div style="display: flex;">
+              <div style="width: 60%; height: 1200px; overflow: auto;">
+                <ThreadViewerGrid :threads="threadsArray" @row-click="onThreadSelected" />
+              </div>
+              <div
+                style="width: 40%; height: 1200px; overflow-y: auto; background-color: #fff; margin-left: 20px; padding: 16px; border: 1px solid #ccc;"
+              >
+                <template v-if="selectedThread">
+                  <h3>{{ selectedThread.name }}</h3>
+                  <pre>{{ selectedThreadContent }}</pre>
+                </template>
+                <template v-else>
+                  <h3>{{ tdt('noThreadSelected') }}</h3>
+                  <p>{{ tdt('pleaseSelectAThread') }}</p>
+                </template>
+              </div>
+            </div>
           </el-collapse-item>
 
           <el-collapse-item name="fileContent" :title="tdt('fileContent')">

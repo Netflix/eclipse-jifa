@@ -22,14 +22,9 @@ import org.eclipse.jifa.common.domain.request.PagingRequest;
 import org.eclipse.jifa.common.domain.vo.PageView;
 import org.eclipse.jifa.common.util.PageViewBuilder;
 import org.eclipse.jifa.tda.enums.MonitorState;
+import org.eclipse.jifa.tda.enums.OSTreadState;
 import org.eclipse.jifa.tda.enums.ThreadType;
-import org.eclipse.jifa.tda.model.CallSiteTree;
-import org.eclipse.jifa.tda.model.Frame;
-import org.eclipse.jifa.tda.model.IdentityPool;
-import org.eclipse.jifa.tda.model.JavaThread;
-import org.eclipse.jifa.tda.model.Monitor;
-import org.eclipse.jifa.tda.model.RawMonitor;
-import org.eclipse.jifa.tda.model.Snapshot;
+import org.eclipse.jifa.tda.model.*;
 import org.eclipse.jifa.tda.model.Thread;
 import org.eclipse.jifa.tda.parser.ParserFactory;
 import org.eclipse.jifa.tda.util.CollectionUtil;
@@ -43,11 +38,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Thread dump analyzer
@@ -305,4 +297,31 @@ public class ThreadDumpAnalyzer {
         map.forEach((s, l) -> counts.put(s, l.size()));
         return counts;
     }
+
+    /**
+     * @return rows of a thread dump table
+     */
+     public List<ThreadDumpRow> rows(PagingRequest paging) {
+
+         List<ThreadDumpRow> threadDumpRows = new ArrayList<>(snapshot.getJavaThreads().stream().map(t -> {
+
+             Frame[] frames = null;
+             int length = 0;
+
+             if (t.getTrace() != null) {
+                 frames = t.getTrace().getFrames();
+                 length = frames.length;
+             }
+
+             return new ThreadDumpRow(t.getName(), t.getId(), t.getOsThreadState(), length, frames, t.getElapsed(), t.getCpu(), t.getLineStart(), t.getLineEnd());
+         }).toList());
+
+         List<ThreadDumpRow> nonJavaThreadDumpRows = snapshot.getNonJavaThreads().stream().map(t -> {
+             return new ThreadDumpRow(t.getName(), t.getId(), t.getOsThreadState(), 0, new Frame[]{}, t.getElapsed(), t.getCpu(), t.getLineStart(), t.getLineEnd());
+         }).toList();
+
+         threadDumpRows.addAll(nonJavaThreadDumpRows);
+
+         return threadDumpRows;
+     }
 }
