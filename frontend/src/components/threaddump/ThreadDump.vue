@@ -103,10 +103,6 @@ function onThreadSelected(thread) {
   selectedThread.value = thread;
   const lineNumberStart = thread.lineNumberStart;
   const lineNumberEnd = thread.lineNumberEnd;
-  console.log("Hello");
-
-  console.log(thread)
-
   if (lineNumberStart && lineNumberEnd) {
     // Calculate limit as end - start + 1
     const limit = lineNumberEnd - lineNumberStart + 1;
