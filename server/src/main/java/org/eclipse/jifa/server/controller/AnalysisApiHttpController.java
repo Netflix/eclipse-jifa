@@ -19,6 +19,7 @@ import org.eclipse.jifa.server.ConfigurationAccessor;
 import org.eclipse.jifa.server.Constant;
 import org.eclipse.jifa.server.domain.dto.AnalysisApiRequest;
 import org.eclipse.jifa.server.service.AnalysisApiService;
+import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.MimeTypeUtils;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -56,11 +58,22 @@ public class AnalysisApiHttpController extends ConfigurationAccessor {
             produces = Constant.APPLICATION_JSON)
     public Object handleRequest(@RequestHeader(name = HttpHeaders.CONTENT_TYPE) String contentType,
                                 @RequestHeader(name = Constant.HTTP_HEADER_ENABLE_SSE, required = false, defaultValue = "false") boolean enableSse,
+                                @RequestHeader(name = "X-Request-ID", required = false) String requestId,
                                 @RequestBody byte[] body) {
+        if (requestId == null || requestId.isEmpty()) {
+            requestId = UUID.randomUUID().toString();
+        }
 
-        JsonObject request = GSON.fromJson(new String(body, ofNullable(MimeTypeUtils.parseMimeType(contentType).getCharset()).orElse(Constant.CHARSET)),
-                                           JsonObject.class);
-        return postProcess(apiService.invoke(new AnalysisApiRequest(request)), enableSse);
+        MDC.put("requestId", requestId);
+        log.debug("Received HTTP analysis request: requestId={}", requestId);
+
+        try {
+            JsonObject request = GSON.fromJson(new String(body, ofNullable(MimeTypeUtils.parseMimeType(contentType).getCharset()).orElse(Constant.CHARSET)),
+                                            JsonObject.class);
+            return postProcess(apiService.invoke(new AnalysisApiRequest(request)), enableSse);
+        } finally {
+            MDC.remove("requestId");
+        }
     }
 
     private Object postProcess(CompletableFuture<?> future, boolean enableSse) {

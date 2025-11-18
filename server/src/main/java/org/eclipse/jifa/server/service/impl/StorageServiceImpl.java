@@ -123,7 +123,7 @@ public class StorageServiceImpl extends ConfigurationAccessor implements Storage
             }
         };
 
-        executor = ExecutorFactory.newExecutor("File Transfer");
+        executor = ExecutorFactory.mdcAware(ExecutorFactory.newExecutor("File Transfer"));
         available = true;
     }
 

@@ -77,7 +77,7 @@ public abstract class AbstractApiExecutor<Analyzer> implements ApiExecutor {
     protected AbstractApiExecutor() {
         loadApi();
 
-        executor = ExecutorFactory.newExecutor(this.getClass().getSimpleName() + " Executor");
+        executor = ExecutorFactory.mdcAware(ExecutorFactory.newExecutor(this.getClass().getSimpleName() + " Executor"));
 
         cachedAnalyzer = Caffeine.newBuilder()
                                  .scheduler(Scheduler.systemScheduler())

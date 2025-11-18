@@ -24,6 +24,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.MDC;
+
 /**
  * Executor factory
  */
@@ -120,9 +122,36 @@ public class ExecutorFactory {
 
         EXECUTORS.put(executor, namePrefix);
         return executor;
-
     }
 
+    /**
+     * Wrap an executor with MDC context propagation.
+     *
+     * @param delegate the executor to wrap
+     * @return executor with MDC context propagation
+     */
+    public static Executor mdcAware(Executor delegate) {
+        return command -> {
+            final Map<String, String> contextMap = MDC.getCopyOfContextMap();
+            delegate.execute(() -> {
+                Map<String, String> previous = MDC.getCopyOfContextMap();
+                try {
+                    if (contextMap != null) {
+                        MDC.setContextMap(contextMap);
+                    } else {
+                        MDC.clear();
+                    }
+                    command.run();
+                } finally {
+                    if (previous != null) {
+                        MDC.setContextMap(previous);
+                    } else {
+                        MDC.clear();
+                    }
+                }
+            });
+        };
+    }
     /**
      * Print the statistic of all executors created by this factory
      *

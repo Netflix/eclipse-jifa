@@ -22,6 +22,7 @@ import org.eclipse.jifa.server.enums.Role;
 import org.eclipse.jifa.server.service.AnalysisApiService;
 import org.eclipse.jifa.server.service.impl.netflix.NetflixGandalfUserAccessService;
 import org.eclipse.jifa.server.util.ControllerUtil;
+import org.slf4j.MDC;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
@@ -41,6 +42,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 import com.netflix.infosec.stairmaster.enforcement.client.StepUpConstants;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.eclipse.jifa.server.Constant.STOMP_ANALYSIS_API_MAPPING;
@@ -64,34 +66,50 @@ public class AnalysisApiStompController {
     @SendToUser(destinations = STOMP_ANALYSIS_API_MAPPING, broadcast = false)
     public CompletableFuture<AnalysisApiStompResponseMessage>
     handleRequest(@Header(name = StompHeaders.CONTENT_TYPE, required = false, defaultValue = Constant.APPLICATION_JSON) String contentType,
-                  @Header(name = Constant.STOMP_ANALYSIS_API_REQUEST_ID_KEY, required = false, defaultValue = "") String requestId,
+                  @Header(name = Constant.STOMP_ANALYSIS_API_REQUEST_ID_KEY, required = false, defaultValue = "") String headerRequestId,
                   @Header(name = StepUpConstants.STEP_UP_AUTHENTICATION_HEADER_NAME, required = false) String stepUpToken,
                   Message<byte[]> message) {
-        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        assert accessor != null;
-        Authentication auth = (Authentication) accessor.getUser();
-        SecurityContextHolder.getContext().setAuthentication(auth != null ? auth : ANONYMOUS);
-
-        log.info("handleRequest step up token: {}", stepUpToken);
-        if (stepUpToken != null) {
-            NetflixGandalfUserAccessService.STEP_UP_TOKEN.set(stepUpToken);
+        // Generate request ID if not provided
+        final String requestId;
+        if (headerRequestId == null || headerRequestId.isEmpty()) {
+            requestId = UUID.randomUUID().toString();
+        } else {
+            requestId = headerRequestId;
         }
- 
+
+        MDC.put("requestId", requestId);
+        log.debug("Received STOMP analysis request: requestId={}", requestId);
+
         try {
-            MimeType mimeType = ControllerUtil.checkMimeTypeForStompMessage(contentType);
-            CompletableFuture<AnalysisApiStompResponseMessage> responseMessage = new CompletableFuture<>();
-            apiService.invoke(new AnalysisApiRequest(ControllerUtil.parseArgs(mimeType, message.getPayload())))
-                      .whenComplete((r, t) -> {
-                          if (t == null) {
-                              responseMessage.complete(new AnalysisApiStompResponseMessage(requestId, r, null));
-                          } else {
-                              responseMessage.complete(new AnalysisApiStompResponseMessage(requestId, null, t));
-                          }
-                      });
-            return responseMessage;
+
+            StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+            assert accessor != null;
+            Authentication auth = (Authentication) accessor.getUser();
+            SecurityContextHolder.getContext().setAuthentication(auth != null ? auth : ANONYMOUS);
+
+            log.info("handleRequest step up token: {}", stepUpToken);
+            if (stepUpToken != null) {
+                NetflixGandalfUserAccessService.STEP_UP_TOKEN.set(stepUpToken);
+            }
+
+            try {
+                MimeType mimeType = ControllerUtil.checkMimeTypeForStompMessage(contentType);
+                CompletableFuture<AnalysisApiStompResponseMessage> responseMessage = new CompletableFuture<>();
+                apiService.invoke(new AnalysisApiRequest(ControllerUtil.parseArgs(mimeType, message.getPayload())))
+                        .whenComplete((r, t) -> {
+                            if (t == null) {
+                                responseMessage.complete(new AnalysisApiStompResponseMessage(requestId, r, null));
+                            } else {
+                                responseMessage.complete(new AnalysisApiStompResponseMessage(requestId, null, t));
+                            }
+                        });
+                return responseMessage;
+            } finally {
+                SecurityContextHolder.getContext().setAuthentication(null);
+                NetflixGandalfUserAccessService.STEP_UP_TOKEN.remove();
+            }
         } finally {
-            SecurityContextHolder.getContext().setAuthentication(null);
-            NetflixGandalfUserAccessService.STEP_UP_TOKEN.remove();
+            MDC.remove("requestId");
         }
     }
 

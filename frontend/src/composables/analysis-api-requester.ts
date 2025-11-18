@@ -36,11 +36,11 @@ function byAxios(resolve: (req: Requester) => void) {
   resolve({
     request(namespace: string, api: string, target: string, parameters?: object): Promise<any> {
       const stepUpToken = useAnalysisStore().stepUpToken;
-      let headers = {};
+      let headers: any = {
+        'request-id': uuidv4()
+      };
       if (stepUpToken) {
-        headers = {
-          'net.netflix.stepup.authentication': stepUpToken,
-        };
+        headers['net.netflix.stepup.authentication'] = stepUpToken;
       }
       return axios
         .post('/jifa-api/analysis', {
@@ -57,7 +57,7 @@ function byAxios(resolve: (req: Requester) => void) {
 }
 
 function byStomp(resolve: (req: Requester) => void) {
-  const resRejMap = new Map<number, ResRej>();
+  const resRejMap = new Map<string, ResRej>();
 
   const client = new Client({
     brokerURL: `${'https:' === location.protocol ? 'wss' : 'ws'}://${location.host}/jifa-stomp`,
@@ -65,11 +65,6 @@ function byStomp(resolve: (req: Requester) => void) {
   });
 
   let subscriptionReceipt = uuidv4();
-  let requestId = 1;
-
-  function nextRequestId() {
-    return requestId++;
-  }
 
   client.connectHeaders = {};
   const token = useEnv().token;
@@ -86,7 +81,7 @@ function byStomp(resolve: (req: Requester) => void) {
     client.subscribe(
       '/ud/analysis',
       (message) => {
-        let requestId = Number(message.headers['request-id']);
+        let requestId = message.headers['request-id'];
 
         if (resRejMap.has(requestId)) {
           let resRej = resRejMap.get(requestId) as ResRej;
@@ -121,18 +116,13 @@ function byStomp(resolve: (req: Requester) => void) {
     client.watchForReceipt(subscriptionReceipt, () => {
       resolve({
         request(namespace: string, api: string, target: string, parameters?: object): Promise<any> {
-          let id = nextRequestId();
+          let id = uuidv4();
           const stepUpToken = useAnalysisStore().stepUpToken;
-          let headers;
+          let headers: any = {
+            'request-id': id
+          };
           if (stepUpToken) {
-            headers = {
-              'request-id': id.toString(),
-              'net.netflix.stepup.authentication': stepUpToken,
-            };
-          } else {
-            headers = {
-              'request-id': id.toString(),
-            };
+            headers['net.netflix.stepup.authentication'] = stepUpToken;
           }
 
           let params = {
