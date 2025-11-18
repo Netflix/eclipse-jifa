@@ -21,4 +21,9 @@ dependencies {
     api 'commons-io:commons-io:2.13.0'
     api 'com.google.guava:guava:30.0-jre'
     api 'com.google.code.gson:gson:2.8.9'
+
+    // SLF4J implementation to support testing MDC functionality
+    // Using Log4j2 which supports MDC and works with SLF4J 2.x
+    testRuntimeOnly 'org.apache.logging.log4j:log4j-core:2.20.0'
+    testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0'
 }
