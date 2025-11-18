@@ -37,7 +37,7 @@ function byAxios(resolve: (req: Requester) => void) {
     request(namespace: string, api: string, target: string, parameters?: object): Promise<any> {
       const stepUpToken = useAnalysisStore().stepUpToken;
       let headers: any = {
-        'request-id': uuidv4()
+        'X-Request-ID': uuidv4()
       };
       if (stepUpToken) {
         headers['net.netflix.stepup.authentication'] = stepUpToken;
