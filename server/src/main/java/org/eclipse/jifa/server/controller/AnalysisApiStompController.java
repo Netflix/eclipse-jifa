@@ -81,13 +81,12 @@ public class AnalysisApiStompController {
         log.debug("Received STOMP analysis request: requestId={}", requestId);
 
         try {
-
             StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
             assert accessor != null;
             Authentication auth = (Authentication) accessor.getUser();
             SecurityContextHolder.getContext().setAuthentication(auth != null ? auth : ANONYMOUS);
 
-            log.info("handleRequest step up token: {}", stepUpToken);
+            NetflixGandalfUserAccessService.logStepUpToken("stomp-handle-request", stepUpToken);
             if (stepUpToken != null) {
                 NetflixGandalfUserAccessService.STEP_UP_TOKEN.set(stepUpToken);
             }
