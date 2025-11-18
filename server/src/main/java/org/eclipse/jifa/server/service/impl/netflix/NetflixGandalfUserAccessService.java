@@ -8,7 +8,9 @@ import static org.eclipse.jifa.server.enums.ServerErrorCode.UNAVAILABLE;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Base64;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -119,13 +121,44 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
         // enforce will throw if it is not successful
         log.debug("found identity, gandalf did not pass, user isAdmin, enforcing step-up");
         try {
+            String stepUpToken = STEP_UP_TOKEN.get();
+            logStepUpToken("pre-enforce", stepUpToken);
             stepUpEnforcer.requireStepUp()
                     .withScopes("instanceId:" + ic.instanceId)
                     .withMaxLifetime(Duration.ofMinutes(90))
-                    .withStepUpToken(STEP_UP_TOKEN.get())
+                    .withStepUpToken(stepUpToken)
                     .enforce();
         } catch (StepUpEnforcementException e) {
+            log.warn("step up token was rejected: {}", e.getMessage());
             Validate.error(ServerErrorCode.ACCESS_DENIED_STEPUP, e.getMessage());
+        }
+    }
+
+    public static void logStepUpToken(String context, String stepUpToken) {
+        if (stepUpToken == null) {
+            log.debug("step up token contents: context={}, token null", context);
+            return;
+        }
+
+        try {
+            String[] parts = stepUpToken.split("\\.");
+            if (parts.length != 3) {
+                log.warn("step up token is not a jwt token: context={}, token={}", context, stepUpToken);
+            }
+
+            String headerJson = new String(
+                Base64.getUrlDecoder().decode(parts[0]),
+                StandardCharsets.UTF_8
+            );
+
+            String payloadJson = new String(
+                Base64.getUrlDecoder().decode(parts[1]),
+                StandardCharsets.UTF_8
+            );
+
+            log.debug("step up token contents: context={}, header={}, payload={}", context, headerJson, payloadJson);
+        } catch (Exception e) {
+            log.warn("step up token could not be displayed: context={}, message={}", context, e.getMessage());
         }
     }
 
