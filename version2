@@ -1,0 +1,3 @@
+1.0.0
+echo "hb-test123" > /tmp/test.txt
+echo "::set-output name=version::1.0.0"
