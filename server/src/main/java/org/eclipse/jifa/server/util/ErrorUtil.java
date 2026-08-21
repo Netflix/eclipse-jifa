@@ -19,6 +19,7 @@ import org.eclipse.jifa.common.domain.exception.ErrorCode;
 import org.eclipse.jifa.common.domain.exception.ErrorCodeAccessor;
 import org.eclipse.jifa.common.enums.CommonErrorCode;
 import org.eclipse.jifa.server.Constant;
+import org.eclipse.jifa.server.domain.exception.StepUpRequiredException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -29,7 +30,25 @@ public class ErrorUtil {
         JsonObject json = new JsonObject();
         json.addProperty("errorCode", getErrorCodeOf(throwable).name());
         json.addProperty("message", getMessage(throwable));
+        String redirectUrl = getRedirectUrlOf(throwable);
+        if (redirectUrl != null) {
+            json.addProperty("redirectUrl", redirectUrl);
+        }
         return json.toString().getBytes(Constant.CHARSET);
+    }
+
+    /**
+     * Surface the step-up authentication URL as a structured field so that clients
+     * do not have to parse it out of the message text.
+     */
+    private static String getRedirectUrlOf(Throwable throwable) {
+        while (throwable != null) {
+            if (throwable instanceof StepUpRequiredException e) {
+                return e.getRedirectUrl();
+            }
+            throwable = throwable.getCause();
+        }
+        return null;
     }
 
     private static ErrorCode getErrorCodeOf(Throwable throwable) {

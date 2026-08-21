@@ -86,6 +86,11 @@ public class AnalysisApiStompController {
             Authentication auth = (Authentication) accessor.getUser();
             SecurityContextHolder.getContext().setAuthentication(auth != null ? auth : ANONYMOUS);
 
+            // NOTE: this only covers the synchronous part of the call below. The
+            // finally block clears the token as soon as apiService.invoke returns its
+            // future, so work that runs after that completes, and on another thread,
+            // will not see it. Today the authority check runs on the REST path
+            // (see StepUpTokenFilter), so nothing depends on the async window.
             NetflixGandalfUserAccessService.logStepUpToken("stomp-handle-request", stepUpToken);
             if (stepUpToken != null) {
                 NetflixGandalfUserAccessService.STEP_UP_TOKEN.set(stepUpToken);

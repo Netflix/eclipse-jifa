@@ -19,7 +19,6 @@ import org.eclipse.jifa.server.condition.ConditionalOnRole;
 import org.eclipse.jifa.server.domain.converter.AnalysisApiStompResponseMessageConverter;
 import org.eclipse.jifa.server.enums.Role;
 import org.eclipse.jifa.server.service.JwtService;
-import org.eclipse.jifa.server.service.impl.netflix.NetflixGandalfUserAccessService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -46,8 +45,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
-
-import com.netflix.infosec.stairmaster.enforcement.client.StepUpConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -137,15 +134,11 @@ public class StompConfigurer extends ConfigurationAccessor implements WebSocketM
                     }
                 }
 
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String token = accessor.getFirstNativeHeader(StepUpConstants.STEP_UP_AUTHENTICATION_HEADER_NAME);
-                    log.info("CONNECT step up token: {}", token);
-                    if (token != null) {
-                        NetflixGandalfUserAccessService.STEP_UP_TOKEN.set(token);
-                    } else {
-                        NetflixGandalfUserAccessService.STEP_UP_TOKEN.remove();
-                    }
-                }
+                // NOTE: the step up token is deliberately NOT read from the CONNECT frame.
+                // This interceptor runs on a pooled clientInboundChannel thread, so a token
+                // stashed here outlives the frame and stays visible to whichever session is
+                // served by that thread next. The frontend sends the token on every publish,
+                // so AnalysisApiStompController reads it per message instead, and clears it.
 
                 return message;
             }
