@@ -19,6 +19,7 @@ import org.eclipse.jifa.server.ConfigurationAccessor;
 import org.eclipse.jifa.server.Constant;
 import org.eclipse.jifa.server.condition.ConditionalOnRole;
 import org.eclipse.jifa.server.filter.JwtTokenRefreshFilter;
+import org.eclipse.jifa.server.filter.StepUpTokenFilter;
 import org.eclipse.jifa.server.service.JwtService;
 import org.eclipse.jifa.server.service.UserService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -148,6 +149,17 @@ public class SecurityFilterConfigurer extends ConfigurationAccessor {
         frb.addUrlPatterns(HTTP_API_PREFIX + "/*");
         // must be after spring security filter chain
         frb.setOrder(Integer.MAX_VALUE);
+        return frb;
+    }
+
+    @ConditionalOnRole({MASTER, STANDALONE_WORKER})
+    @Bean
+    public FilterRegistrationBean<Filter> stepUpTokenFilter() {
+        FilterRegistrationBean<Filter> frb = new FilterRegistrationBean<>();
+        frb.setFilter(new StepUpTokenFilter());
+        frb.addUrlPatterns(HTTP_API_PREFIX + "/*");
+        // must be after spring security filter chain, and before the jwt refresh filter
+        frb.setOrder(Integer.MAX_VALUE - 1);
         return frb;
     }
 

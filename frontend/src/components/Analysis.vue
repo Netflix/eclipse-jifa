@@ -125,15 +125,19 @@ function pollProgress() {
 function handleError(e?) {
   // check if error is a 403, we might do a step-up auth
   if (e instanceof AxiosError && e?.response?.status === 403) {
-    let message = e.response?.data?.message;
-    let words = message.split(' ');
+    // the server extracts the stairmaster url and returns it as a field, so we do
+    // not have to pick it out of the message text by word position
+    const redirectUrl = e.response?.data?.redirectUrl;
+    const message = e.response?.data?.message;
 
-    // replace 10th word from message, split by spaces
-    let target = words[9] + "&redirect=" + window.location.href;
-    window.location.href = target;
-    words[9] = target;
-
-    log.value = words.join(' ');
+    if (redirectUrl) {
+      const separator = redirectUrl.includes('?') ? '&' : '?';
+      const target = redirectUrl + separator + 'redirect=' + encodeURIComponent(window.location.href);
+      log.value = message;
+      window.location.href = target;
+    } else {
+      log.value = message ? message : e;
+    }
   } else if (e instanceof AxiosError) {
     log.value = e.response?.data?.message ? e.response.data.message : e;
   } else if (e.message) {

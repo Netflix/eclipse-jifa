@@ -17,6 +17,7 @@ import javax.net.ssl.HttpsURLConnection;
 import org.eclipse.jifa.common.util.Validate;
 import org.eclipse.jifa.server.domain.entity.shared.file.BaseFileEntity;
 import org.eclipse.jifa.server.domain.entity.shared.user.UserEntity;
+import org.eclipse.jifa.server.domain.exception.StepUpRequiredException;
 import org.eclipse.jifa.server.enums.ServerErrorCode;
 import org.eclipse.jifa.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,14 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
 
     @Value("${fc.authPolicyPrefix}")
     private String authPolicyPrefix;
+
+    /**
+     * Gandalf policy naming the operators who may escalate to step-up on any
+     * instance. Evaluated per request, unlike {@code UserEntity#isAdmin}, which is
+     * resolved from the SSO group list once at login and then baked into the jifa jwt.
+     */
+    @Value("${fc.operatorPolicy}")
+    private String operatorPolicy;
 
     AuthorizationClient authorizationClient;
 
@@ -107,7 +116,7 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
                 return;
             }
 
-            if (!user.isAdmin()) {
+            if (!isOperator(subject)) {
                 Validate.error(ServerErrorCode.ACCESS_DENIED, "Access denied by gandalf");
             }
 
@@ -119,7 +128,7 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
         }
 
         // enforce will throw if it is not successful
-        log.debug("found identity, gandalf did not pass, user isAdmin, enforcing step-up");
+        log.debug("found identity, gandalf did not pass, user is an operator, enforcing step-up");
         try {
             String stepUpToken = STEP_UP_TOKEN.get();
             logStepUpToken("pre-enforce", stepUpToken);
@@ -130,8 +139,20 @@ public class NetflixGandalfUserAccessService implements FileAccessService {
                     .enforce();
         } catch (StepUpEnforcementException e) {
             log.warn("step up token was rejected: {}", e.getMessage());
-            Validate.error(ServerErrorCode.ACCESS_DENIED_STEPUP, e.getMessage());
+            throw StepUpRequiredException.fromMessage(e.getMessage());
         }
+    }
+
+    /**
+     * Whether the caller may escalate to step-up for an instance their application
+     * policy does not cover.
+     *
+     * @param subject the gandalf subject already built for this caller
+     */
+    boolean isOperator(JsonObject subject) {
+        AuthorizationResponse response = authorizationClient.isAuthorized(operatorPolicy, subject, null);
+        log.debug("gandalf operator policy {} response: {}", operatorPolicy, response);
+        return response.getAllowed();
     }
 
     public static void logStepUpToken(String context, String stepUpToken) {
