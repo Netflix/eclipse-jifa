@@ -15,6 +15,7 @@ package org.eclipse.jifa.server.controller;
 import com.google.gson.JsonElement;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jifa.server.Constant;
+import org.eclipse.jifa.server.netflix.test.TestIdentity;
 import org.eclipse.jifa.server.service.AnalysisApiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,9 @@ public class TestAnalysisApiStompController {
     @MockBean
     private AnalysisApiService apiService;
 
+    @MockBean
+    private org.eclipse.jifa.server.service.impl.netflix.NetflixGandalfUserAccessService gandalfUserAccessService;
+
     private WebSocketStompClient webSocketStompClient;
 
     @BeforeEach
@@ -66,7 +70,7 @@ public class TestAnalysisApiStompController {
     @Test
     public void test() throws Exception {
         StompSession session = webSocketStompClient
-                .connectAsync(String.format("ws://localhost:%d/%s", Constant.DEFAULT_PORT, Constant.STOMP_ENDPOINT), new StompSessionHandlerAdapter() {
+                .connectAsync(String.format("ws://localhost:%d/%s", Constant.DEFAULT_PORT, Constant.STOMP_ENDPOINT), TestIdentity.handshakeHeaders(), new StompSessionHandlerAdapter() {
                 })
                 .get(1000, TimeUnit.SECONDS);
 

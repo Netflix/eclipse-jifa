@@ -91,6 +91,15 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
+tasks.named('test') {
+    // SBN refuses to start under the laptop profile unless this is set.
+    // The SBN Gradle plugin normally sets it, but this build pins SBN libraries by hand.
+    environment 'SBN_LOCAL_DEV', 'true'
+    // Each STOMP test session allocates the 64 MB WebSocket text buffer from StompConfigurer.
+    // The SBN context and those buffers do not fit in the default worker heap.
+    maxHeapSize = '4g'
+}
+
 run.enabled = false
 jar.enabled = false
 startScripts.enabled = false

@@ -1,0 +1,16 @@
+# Test-only overrides for the Netflix fork.
+#
+# Spring Boot loads classpath:/config/application.yml after classpath:/application.yml,
+# so these values add to the main configuration and win where both set a key.
+
+# Placeholders that the packaged application-{prod,test}.yml files supply in deployments.
+fc:
+  flamecommanderApi: https://flamecommander.invalid:7004/
+  ssmOutputPath: ${java.io.tmpdir}/jifa-test-ssm-outputs
+  adminGroup: test-admins@example.com
+  authPolicyPrefix: TEST-POLICY-
+
+stairmaster.stepup.defaultOrigin: https://jifa.invalid
+
+# Tests use plain ws:// and http:// on localhost. In deployments, the ALB sends X-Forwarded-Proto: https.
+netflix.sso.config.app.secure-channel-required: false

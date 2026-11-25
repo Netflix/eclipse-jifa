@@ -15,6 +15,7 @@ package org.eclipse.jifa.server.controller;
 import com.google.gson.JsonElement;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jifa.server.Constant;
+import org.eclipse.jifa.server.netflix.test.TestIdentity;
 import org.eclipse.jifa.server.service.AnalysisApiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,9 @@ public class TestMdcStompRequestTracing {
     @MockBean
     private AnalysisApiService apiService;
 
+    @MockBean
+    private org.eclipse.jifa.server.service.impl.netflix.NetflixGandalfUserAccessService gandalfUserAccessService;
+
     private WebSocketStompClient webSocketStompClient;
 
     private final AtomicReference<String> capturedRequestIdInService = new AtomicReference<>();
@@ -84,6 +88,7 @@ public class TestMdcStompRequestTracing {
     public void testStompRequestIdPropagation() throws Exception {
         StompSession session = webSocketStompClient
                 .connectAsync(String.format("ws://localhost:%d/%s", Constant.DEFAULT_PORT, Constant.STOMP_ENDPOINT),
+                              TestIdentity.handshakeHeaders(),
                               new StompSessionHandlerAdapter() {})
                 .get(10, TimeUnit.SECONDS);
 
@@ -142,6 +147,7 @@ public class TestMdcStompRequestTracing {
     public void testStompRequestIdGeneratedWhenNotProvided() throws Exception {
         StompSession session = webSocketStompClient
                 .connectAsync(String.format("ws://localhost:%d/%s", Constant.DEFAULT_PORT, Constant.STOMP_ENDPOINT),
+                              TestIdentity.handshakeHeaders(),
                               new StompSessionHandlerAdapter() {})
                 .get(10, TimeUnit.SECONDS);
 
